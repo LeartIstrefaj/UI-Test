@@ -129,52 +129,123 @@
 
 // THE FINAL VERSION
 
+// import * as React from "react"
+// import { cva, type VariantProps } from "class-variance-authority"
+// import { cn } from "@/lib/utils"
+// import { X, Bell, AlertTriangle, CheckCircle } from "lucide-react"
+// import './alert.css';
+
+// const alertVariants = cva("relative w-full rounded-lg border p-4 flex items-start gap-3", {
+//   variants: {
+//     variant: {
+//       success: "bg-green-50 border-green-500 text-green-700",
+//       warning: "bg-[#fff8e7] border-[#f5c155] text-[#915930]",
+//       info: "bg-blue-50 border-blue-500 text-blue-700",
+//     },
+//   },
+//   defaultVariants: {
+//     variant: "info",
+//   },
+// })
+
+// export interface AlertProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {
+//   title?: string
+//   description?: string
+//   onClose?: () => void
+// }
+
+// const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
+//   ({ className, variant, title, description, onClose, ...props }, ref) => {
+//     const IconMap = {
+//       success: CheckCircle,
+//       warning: AlertTriangle,
+//       info: Bell,
+//     }
+
+//     const Icon = variant && IconMap[variant]
+
+//     return (
+//       <div ref={ref} role="alert" className={cn(alertVariants({ variant }), "max-w-2xl", className="alert")} {...props}>
+//         {Icon && <Icon className="h-5 w-5 flex-shrink-0" />}
+//         <div className="flex-1">
+//           {title && <div className="font-medium">{title}</div>}
+//           {description && <div className="text-sm mt-1">{description}</div>}
+//           {props.children}
+//         </div>
+//         {onClose && (
+//           <button onClick={onClose} className="text-current opacity-70 hover:opacity-100 focus:outline-none">
+//             <X className="h-4 w-4" />
+//             <span className="sr-only">Close</span>
+//           </button>
+//         )}
+//       </div>
+//     )
+//   },
+// )
+// Alert.displayName = "Alert"
+
+// export { Alert, alertVariants }
+
+
+
+// -------------------------------------------------------------------
 import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "@/lib/utils"
-import { X, Bell, AlertTriangle, CheckCircle } from "lucide-react"
+import { X, Bell, AlertTriangle, CheckCircle, Info, AlertCircle } from "lucide-react"
+import "./alert.css"
 
-const alertVariants = cva("relative w-full rounded-lg border p-4 flex items-start gap-3", {
-  variants: {
-    variant: {
-      success: "bg-green-50 border-green-500 text-green-700",
-      warning: "bg-[#fff8e7] border-[#f5c155] text-[#915930]",
-      info: "bg-blue-50 border-blue-500 text-blue-700",
-    },
-  },
-  defaultVariants: {
-    variant: "info",
-  },
-})
-
-export interface AlertProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {
+export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
+  /**
+   * The variant of the alert, which determines its color scheme and icon.
+   */
+  variant?: "info" | "success" | "warning" | "error" | "notification"
+  /**
+   * The main message of the alert.
+   */
   title?: string
+  /**
+   * Additional details or context for the alert.
+   */
   description?: string
+  /**
+   * Whether to show the icon associated with the alert variant.
+   */
+  showIcon?: boolean
+  /**
+   * Function to call when the close button is clicked.
+   */
   onClose?: () => void
 }
 
+/**
+ * Alert component for displaying important messages to the user.
+ *
+ * It supports different variants, can display a title and/or description,
+ * and can optionally show an icon and close button.
+ */
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
-  ({ className, variant, title, description, onClose, ...props }, ref) => {
+  ({ className = "", variant = "info", title, description, showIcon = true, onClose, ...props }, ref) => {
     const IconMap = {
+      info: Bell,
       success: CheckCircle,
       warning: AlertTriangle,
-      info: Bell,
+      error: AlertCircle,
+      notification: Info,
     }
 
-    const Icon = variant && IconMap[variant]
+    const Icon = IconMap[variant]
 
     return (
-      <div ref={ref} role="alert" className={cn(alertVariants({ variant }), "max-w-2xl", className)} {...props}>
-        {Icon && <Icon className="h-5 w-5 flex-shrink-0" />}
-        <div className="flex-1">
-          {title && <div className="font-medium">{title}</div>}
-          {description && <div className="text-sm mt-1">{description}</div>}
-          {props.children}
+      <div ref={ref} role="alert" className={`alert ${className}`} data-variant={variant} {...props}>
+        <div className="alert-content">
+          {showIcon && Icon && <Icon className="icon" />}
+          <div className="alert-text">
+            {title && <h4 className="title">{title}</h4>}
+            {description && <p className="description">{description}</p>}
+          </div>
         </div>
         {onClose && (
-          <button onClick={onClose} className="text-current opacity-70 hover:opacity-100 focus:outline-none">
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
+          <button onClick={onClose} className="close-button" aria-label="Close alert">
+            <X />
           </button>
         )}
       </div>
@@ -183,5 +254,7 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
 )
 Alert.displayName = "Alert"
 
-export { Alert, alertVariants }
+export { Alert }
+
+
 
