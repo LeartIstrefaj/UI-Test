@@ -189,41 +189,72 @@
 
 
 // -------------------------------------------------------------------
+// import * as React from "react"
+// import { X, Bell, AlertTriangle, CheckCircle, Info, AlertCircle } from "lucide-react"
+// import "./alert.css"
+
+// export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
+//   variant?: "info" | "success" | "warning" | "error" | "notification"
+//   title?: string
+//   description?: string
+//   showIcon?: boolean
+//   onClose?: () => void
+// }
+
+// const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
+//   ({ className = "", variant = "info", title, description, showIcon = true, onClose, ...props }, ref) => {
+//     const IconMap = {
+//       info: Bell,
+//       success: CheckCircle,
+//       warning: AlertTriangle,
+//       error: AlertCircle,
+//       notification: Info,
+//     }
+
+//     const Icon = IconMap[variant]
+
+//     return (
+//       <div ref={ref} role="alert" className={`alert ${className}`} data-variant={variant} {...props}>
+//         <div className="alert-content">
+//           {showIcon && Icon && <Icon className="icon" />}
+//           <div className="alert-text">
+//             {title && <h4 className="title">{title}</h4>}
+//             {description && <p className="description">{description}</p>}
+//           </div>
+//         </div>
+//         {onClose && (
+//           <button onClick={onClose} className="close-button" aria-label="Close alert">
+//             <X />
+//           </button>
+//         )}
+//       </div>
+//     )
+//   },
+// )
+// Alert.displayName = "Alert"
+
+// export { Alert }
+
+
+
+"use client"
+
 import * as React from "react"
 import { X, Bell, AlertTriangle, CheckCircle, Info, AlertCircle } from "lucide-react"
 import "./alert.css"
 
 export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
-  /**
-   * The variant of the alert, which determines its color scheme and icon.
-   */
   variant?: "info" | "success" | "warning" | "error" | "notification"
-  /**
-   * The main message of the alert.
-   */
   title?: string
-  /**
-   * Additional details or context for the alert.
-   */
   description?: string
-  /**
-   * Whether to show the icon associated with the alert variant.
-   */
   showIcon?: boolean
-  /**
-   * Function to call when the close button is clicked.
-   */
   onClose?: () => void
 }
 
-/**
- * Alert component for displaying important messages to the user.
- *
- * It supports different variants, can display a title and/or description,
- * and can optionally show an icon and close button.
- */
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
   ({ className = "", variant = "info", title, description, showIcon = true, onClose, ...props }, ref) => {
+    const [isVisible, setIsVisible] = React.useState(true)
+
     const IconMap = {
       info: Bell,
       success: CheckCircle,
@@ -233,6 +264,17 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
     }
 
     const Icon = IconMap[variant]
+
+    const handleClose = () => {
+      setIsVisible(false)
+      if (onClose) {
+        onClose()
+      }
+    }
+
+    if (!isVisible) {
+      return null
+    }
 
     return (
       <div ref={ref} role="alert" className={`alert ${className}`} data-variant={variant} {...props}>
@@ -244,7 +286,7 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
           </div>
         </div>
         {onClose && (
-          <button onClick={onClose} className="close-button" aria-label="Close alert">
+          <button onClick={handleClose} className="close-button" aria-label="Close alert">
             <X />
           </button>
         )}
@@ -255,6 +297,4 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
 Alert.displayName = "Alert"
 
 export { Alert }
-
-
 

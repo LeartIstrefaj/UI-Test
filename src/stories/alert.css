@@ -1,3 +1,6 @@
+*{
+    font-family: 'Roboto', sans-serif;
+}
 .alert {
     --shadow-color: 0deg 0% 0%;
     --shadow-elevation: 0.5px 0.9px 0.9px hsl(var(--shadow-color) / 0.07), 1.5px 2.8px 2.8px -1.2px
@@ -101,10 +104,11 @@
     color: #1c1c1c;
     margin: 0;
     line-height: 1.4;
+    
   }
   
   .alert .description {
-    font-size: 14px;
+    font-size: 13px;
     color: #4b5563;
     margin: 4px 0 0 0;
     line-height: 1.5;
