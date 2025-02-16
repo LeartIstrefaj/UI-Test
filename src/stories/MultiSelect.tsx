@@ -129,128 +129,191 @@
 // }
 
 
+// import React, { useState, useEffect } from 'react';
+// import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@radix-ui/react-select';
+// import Spinner from './Spinner'; // Import the Spinner component
+
+// // Define the type for an option
+// type Option = {
+//   value: string;
+//   label: string;
+// };
+
+// // Define the props for the MultiSelect component
+// interface MultiSelectProps {
+//   options: () => Promise<Option[]>; // Function that returns a promise of options
+//   placeholder?: string; // Optional placeholder text
+//   isLoading?: boolean; // Optional loading state
+//   onChange: (selected: string[]) => void; // Callback function for selected items
+//   defaultSelected?: string[]; // Optional array of pre-selected values
+//   clearable?: boolean; // Optional clear functionality
+//   disabled?: boolean; // Optional disabled state
+// }
+
+// const MultiSelect: React.FC<MultiSelectProps> = ({
+//   options,
+//   placeholder = 'Select items...',
+//   isLoading = false,
+//   onChange,
+//   defaultSelected = [],
+//   clearable = true,
+//   disabled = false,
+// }) => {
+//   const [selected, setSelected] = useState<string[]>(defaultSelected);
+//   const [optionsList, setOptionsList] = useState<Option[]>([]);
+
+//   useEffect(() => {
+//     const fetchOptionsData = async () => {
+//       const data = await options();
+//       setOptionsList(data);
+//     };
+//     fetchOptionsData();
+//   }, [options]);
+
+//   const handleChange = (value: string) => {
+//     const updatedSelected = selected.includes(value)
+//       ? selected.filter((item) => item !== value)
+//       : [...selected, value];
+//     setSelected(updatedSelected);
+//     onChange(updatedSelected);
+//   };
+
+//   return (
+//     <Select disabled={disabled}>
+//       <SelectTrigger>
+//         <SelectValue placeholder={placeholder} />
+//         {isLoading && <Spinner />} {/* Show spinner when loading */}
+//       </SelectTrigger>
+//       <SelectContent>
+//         {optionsList.map((option) => (
+//           <SelectItem
+//             key={option.value}
+//             value={option.value}
+//             onSelect={() => handleChange(option.value)}
+//           >
+//             {option.label}
+//           </SelectItem>
+//         ))}
+//       </SelectContent>
+//     </Select>
+//   );
+// };
+
+// export default MultiSelect;
 
 "use client"
 
-import type React from "react"
-import { useEffect, useState } from "react"
-import { CustomPopover } from "./CustomPopover"
-import { CustomButton } from "./CustomButton"
-import { CustomBadge } from "./CustomBadge"
-import { CustomCommand, CustomCommandList, CustomCommandItem, CustomCommandEmpty } from "./CustomCommand"
-import { CheckIcon, ChevronsUpDown, X } from "lucide-react"
+import * as React from "react"
+import { X, ChevronDown } from "lucide-react"
+import "./multiselect.css"
 
-export interface MultiSelectOption {
+type Option = {
   value: string
   label: string
-  disabled?: boolean
 }
 
 interface MultiSelectProps {
-  options: MultiSelectOption[] | (() => Promise<MultiSelectOption[]>)
-  value?: string[]
-  onChange?: (selected: string[]) => void
+  options: () => Promise<Option[]>
   placeholder?: string
   isLoading?: boolean
+  onChange: (selected: string[]) => void
+  defaultSelected?: string[]
+  clearable?: boolean
   disabled?: boolean
 }
 
-export const MultiSelect: React.FC<MultiSelectProps> = ({
+export function MultiSelect({
   options,
-  value = [],
-  onChange,
   placeholder = "Select items...",
   isLoading = false,
+  onChange,
+  defaultSelected = [],
+  clearable = true,
   disabled = false,
-}) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [localOptions, setLocalOptions] = useState<MultiSelectOption[]>([])
-  const [internalLoading, setInternalLoading] = useState(false)
+}: MultiSelectProps) {
+  const [selected, setSelected] = React.useState<string[]>(defaultSelected)
+  const [optionsList, setOptionsList] = React.useState<Option[]>([])
+  const [isOpen, setIsOpen] = React.useState(false)
+  const containerRef = React.useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const loadOptions = async () => {
-      if (typeof options === "function") {
-        setInternalLoading(true)
-        try {
-          const result = await options()
-          setLocalOptions(result)
-        } catch (error) {
-          console.error("Failed to load options:", error)
-        } finally {
-          setInternalLoading(false)
-        }
-      } else {
-        setLocalOptions(options)
+  React.useEffect(() => {
+    const fetchOptionsData = async () => {
+      const data = await options()
+      setOptionsList(data)
+    }
+    fetchOptionsData()
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
       }
     }
-
-    loadOptions()
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [options])
 
-  const currentOptions = localOptions
-  const showLoading = internalLoading || isLoading
-
-  const handleSelect = (optionValue: string) => {
-    const newValue = value.includes(optionValue) ? value.filter((v) => v !== optionValue) : [...value, optionValue]
-    onChange?.(newValue)
+  const handleSelect = (value: string) => {
+    const updatedSelected = selected.includes(value) ? selected.filter((item) => item !== value) : [...selected, value]
+    setSelected(updatedSelected)
+    onChange(updatedSelected)
   }
 
-  const clearSelection = (e: React.MouseEvent) => {
+  const removeItem = (valueToRemove: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    onChange?.([])
+    const updatedSelected = selected.filter((value) => value !== valueToRemove)
+    setSelected(updatedSelected)
+    onChange(updatedSelected)
   }
 
-  const triggerButton = (
-    <CustomButton variant="outline" disabled={disabled} className="w-full justify-between min-h-10 h-auto">
-      <div className="flex flex-wrap gap-1">
-        {value.length > 0 ? (
-          currentOptions
-            .filter((opt) => value.includes(opt.value))
-            .map((opt) => (
-              <CustomBadge key={opt.value} className="mb-1">
-                {opt.label}
-              </CustomBadge>
-            ))
-        ) : (
-          <span className="text-gray-400">{placeholder}</span>
-        )}
-      </div>
-      {value.length > 0 ? (
-        <X className="ml-2 h-4 w-4 opacity-50 hover:opacity-100" onClick={clearSelection} />
-      ) : (
-        <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
-      )}
-    </CustomButton>
-  )
+  const clearAll = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSelected([])
+    onChange([])
+  }
 
   return (
-    <CustomPopover
-      open={isOpen}
-      onOpenChange={setIsOpen}
-      trigger={triggerButton}
-      content={
-        <CustomCommand>
-          <CustomCommandList>
-            {showLoading ? (
-              <CustomCommandItem onSelect={() => {}}>Loading...</CustomCommandItem>
-            ) : currentOptions.length === 0 ? (
-              <CustomCommandEmpty>No options available</CustomCommandEmpty>
-            ) : (
-              currentOptions.map((option) => (
-                <CustomCommandItem
-                  key={option.value}
-                  onSelect={() => !option.disabled && handleSelect(option.value)}
-                  disabled={option.disabled}
-                >
-                  <CheckIcon className={`mr-2 h-4 w-4 ${value.includes(option.value) ? "opacity-100" : "opacity-0"}`} />
-                  {option.label}
-                </CustomCommandItem>
-              ))
-            )}
-          </CustomCommandList>
-        </CustomCommand>
-      }
-    />
+    <div ref={containerRef} className="multi-select-container">
+      <div
+        className={`select-input ${isOpen ? "is-open" : ""} ${disabled ? "disabled" : ""}`}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+      >
+        {selected.map((value) => {
+          const option = optionsList.find((opt) => opt.value === value)
+          return (
+            <span key={value} className="selected-item">
+              {option?.label}
+              <button onClick={(e) => removeItem(value, e)} className="remove-button">
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )
+        })}
+        {selected.length === 0 && <span className="placeholder">{placeholder}</span>}
+        <div className="controls">
+          {clearable && selected.length > 0 && (
+            <button onClick={clearAll} className="clear-button">
+              <X className="dropdown-icon" />
+            </button>
+          )}
+          <ChevronDown className="dropdown-icon" />
+        </div>
+      </div>
+      {isOpen && (
+        <div className="options-dropdown">
+          {optionsList.map((option) => (
+            <div
+              key={option.value}
+              className={`option-item ${selected.includes(option.value) ? "selected" : ""}`}
+              onClick={() => handleSelect(option.value)}
+            >
+              {option.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
+
+
 
